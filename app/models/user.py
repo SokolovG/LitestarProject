@@ -1,9 +1,11 @@
-from pydantic import BaseModel, Field
-from typing import Optional
+from sqlalchemy import Column, Integer, String
+from database.connection import Base
 
-class User(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50, description='Username', examples=['Jonn_lennon'])
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50), unique=True)
+    email = Column(String(100))
 
-    first_name: Optional[str] = Field(None, min_length=2, max_length=20, description='First name')
-    age: Optional[int] = Field(None, ge=18, le=100)
-    city: Optional[str] = Field(None, min_length=2, max_length=30, description='Your city')
+    def __repr__(self):
+        return f'<User {self.username}>'
