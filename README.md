@@ -10,9 +10,10 @@ Python 3.11
 Poetry (рекомендуется для управления зависимостями)
 
 Установка
-bashCopy# Клонирование репозитория
-git clone https://github.com/your-username/litestar-learning.git
-cd litestar-learning
+
+# Клонирование репозитория
+git clone {url}
+
 
 # Установка зависимостей с помощью Poetry
 poetry install
