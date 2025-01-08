@@ -8,7 +8,7 @@ from litestar.exceptions import NotFoundException
 
 from config.exceptions import UserAlreadyExistError
 from models.user import User
-from schemas.user import UpdateUserSchema, UserSchema
+from schemas.user import UpdateUserSchema, UserSchema, UserCreateSchema
 
 
 @get()
@@ -43,7 +43,8 @@ async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSessio
         raise NotFoundException(f'User with {user_id} not found.')
 
     if user.username != data.username:
-        existing_user_query = select(User).where(User.username == data.username)
+        existing_user_query = (
+            select(User).where(User.username == data.username))
         exist_user = await session.execute(existing_user_query)
         if exist_user.scalar_one_or_none():
             raise UserAlreadyExistError()
@@ -56,7 +57,7 @@ async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSessio
 
 
 @post('/create')
-async def create_user(data: UserSchema, session: AsyncSession) -> dict:
+async def create_user(data: UserCreateSchema, session: AsyncSession) -> dict:
     """Create user."""
     query = select(User).where(User.username == data.username)
     existing_user = await session.execute(query)
@@ -84,10 +85,11 @@ async def delete_user(user_id: int, session: AsyncSession) -> None:
         raise NotFoundException(f'User with {user_id} not found.')
 
     await session.delete(user)
-    await  session.commit()
+    await session.commit()
 
 
 user_router = Router(
     path='/users',
-    route_handlers=[get_users, get_user_by_id, create_user, update_user, delete_user]
+    route_handlers=[get_users, get_user_by_id,
+                    create_user, update_user, delete_user]
 )
