@@ -20,9 +20,6 @@ poetry install
 
 # Или с помощью pip
 pip install -r requirements.txt
-Запуск проекта
-bashCopy# Активация виртуального окружения Poetry
-poetry shell
 
 # Запуск приложения
 python main.py
