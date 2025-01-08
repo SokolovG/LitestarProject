@@ -1,4 +1,4 @@
-from litestar import get, Router, post, put
+from litestar import get, Router, post, put, delete
 from models.user import User
 from schemas.user import UserSchema, UpdateUserSchema
 from config.exceptions import UserAlreadyExistError
@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from litestar.exceptions import NotFoundException
 from typing import List
+
 
 @get()
 async def get_users(session: AsyncSession) -> List[UserSchema]:
@@ -65,7 +66,20 @@ async def create_user(data: UserSchema, session: AsyncSession) -> dict:
     return {"id": user.id, "username": user.username, "email": user.email}
 
 
+@delete('/delete/{user_id:int}')
+async def delete_user(user_id: int, session: AsyncSession) -> None:
+    query = select(User).where(User.id == user_id)
+    result = await session.execute(query)
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        raise NotFoundException(f'User with {user_id} not found.')
+
+    await session.delete(user)
+    await  session.commit()
+
+
 user_router = Router(
     path='/users',
-    route_handlers=[get_users, get_user_by_id, create_user, update_user]
+    route_handlers=[get_users, get_user_by_id, create_user, update_user, delete_user]
 )
