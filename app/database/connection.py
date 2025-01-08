@@ -1,13 +1,16 @@
-from config.settings import settings
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
+from config.settings import settings
+
+
+# Creating engine.
 engine = create_async_engine(
     url=settings.database_url,
     echo=True
 )
 
-
+# Creating parent class for models.
 Base = declarative_base()
 
 

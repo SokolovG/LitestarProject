@@ -1,6 +1,9 @@
 import pytest
-from app.main import app
+
 from litestar.testing import TestClient
+
+from app.main import app
+
 
 @pytest.fixture
 async def client():

@@ -1,15 +1,19 @@
-from litestar import get, Router, post, put, delete
-from models.user import User
-from schemas.user import UserSchema, UpdateUserSchema
-from config.exceptions import UserAlreadyExistError
+from typing import List
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from litestar import Router, delete, get, post, put
 from litestar.exceptions import NotFoundException
-from typing import List
+
+from config.exceptions import UserAlreadyExistError
+from models.user import User
+from schemas.user import UpdateUserSchema, UserSchema
 
 
 @get()
 async def get_users(session: AsyncSession) -> List[UserSchema]:
+    """Get all users."""
     query = select(User)
     result = await session.execute(query)
     users = result.scalars().all()
@@ -17,6 +21,7 @@ async def get_users(session: AsyncSession) -> List[UserSchema]:
 
 @get('/{user_id:int}')
 async def get_user_by_id(user_id: int, session: AsyncSession) -> dict:
+    """Get user by id."""
     query = select(User).where(User.id == user_id)
     result = await session.execute(query)
 
@@ -30,6 +35,7 @@ async def get_user_by_id(user_id: int, session: AsyncSession) -> dict:
 
 @put('/update/{user_id:int}')
 async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSession) -> dict:
+    """Update user data."""
     query = select(User).where(User.id == user_id)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
@@ -51,6 +57,7 @@ async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSessio
 
 @post('/create')
 async def create_user(data: UserSchema, session: AsyncSession) -> dict:
+    """Create user."""
     query = select(User).where(User.username == data.username)
     existing_user = await session.execute(query)
 
@@ -68,6 +75,7 @@ async def create_user(data: UserSchema, session: AsyncSession) -> dict:
 
 @delete('/delete/{user_id:int}')
 async def delete_user(user_id: int, session: AsyncSession) -> None:
+    """Delete user."""
     query = select(User).where(User.id == user_id)
     result = await session.execute(query)
     user = result.scalar_one_or_none()

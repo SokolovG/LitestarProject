@@ -1,8 +1,11 @@
 from sqlalchemy import Column, Integer, String
-from database.connection import Base
 from pydantic import ConfigDict
 
+from database.connection import Base
+
+
 class User(Base):
+    """Class for standart user model."""
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         str_strip_whitespace=True

@@ -1,7 +1,9 @@
-from litestar import Litestar
-from routes.user import user_router
-from database.connection import engine, Base, get_session
 import uvicorn
+
+from litestar import Litestar
+
+from database.connection import Base, engine, get_session
+from routes.user import user_router
 
 
 async def create_tables():
