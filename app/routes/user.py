@@ -32,7 +32,6 @@ async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSessio
     query = select(User).where(User.id == user_id)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
-    print('fwrfljefkergljf')
     if user is None:
         raise NotFoundException(f'User with {user_id} not found.')
 
