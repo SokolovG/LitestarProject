@@ -1,6 +1,6 @@
 from litestar import get, Router, post, put
 from models.user import User
-from schemas.user import CreateUserSchema, UpdateUserSchema
+from schemas.user import UserSchema, UpdateUserSchema
 from config.exceptions import UserAlreadyExistError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,12 +8,11 @@ from litestar.exceptions import NotFoundException
 from typing import List
 
 @get()
-async def get_users(session: AsyncSession) -> List[dict]:
+async def get_users(session: AsyncSession) -> List[UserSchema]:
     query = select(User)
     result = await session.execute(query)
     users = result.scalars().all()
-    return [{"id": user.id, "username": user.username, "email": user.email} for user in users]
-
+    return [UserSchema.from_orm(user) for user in users]
 
 @get('/{user_id:int}')
 async def get_user_by_id(user_id: int, session: AsyncSession) -> dict:
@@ -33,6 +32,7 @@ async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSessio
     query = select(User).where(User.id == user_id)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
+    print('fwrfljefkergljf')
     if user is None:
         raise NotFoundException(f'User with {user_id} not found.')
 
@@ -50,7 +50,7 @@ async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSessio
 
 
 @post('/create')
-async def create_user(data: CreateUserSchema, session: AsyncSession) -> dict:
+async def create_user(data: UserSchema, session: AsyncSession) -> dict:
     query = select(User).where(User.username == data.username)
     existing_user = await session.execute(query)
 
@@ -68,5 +68,5 @@ async def create_user(data: CreateUserSchema, session: AsyncSession) -> dict:
 
 user_router = Router(
     path='/users',
-    route_handlers=[get_users, get_user_by_id, create_user]
+    route_handlers=[get_users, get_user_by_id, create_user, update_user]
 )
