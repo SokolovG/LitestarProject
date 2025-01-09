@@ -5,21 +5,22 @@ from passlib.context import CryptContext
 from database.connection import Base
 
 
-pwd_context = CryptContext(schemes=['bcrypt'], deprecated=True)
+pwd_context = CryptContext(schemes=['bcrypt'])
+
 
 class User(Base):
-    """Class for standart user model."""
+    """Class for standard user model."""
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         str_strip_whitespace=True
     )
     __tablename__ = 'users'
-    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    username = Column(String(50), unique=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(100), index=True, nullable=False)
     first_name = Column(String(30))
     last_name = Column(String(30))
-    email = Column(String(100), index=True)
-    hashed_password = Column(String, unique=True)
+    hashed_password = Column(String, unique=True, nullable=False)
 
 
     @property

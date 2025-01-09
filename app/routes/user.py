@@ -1,12 +1,13 @@
 from typing import List
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from litestar import Router, delete, get, post, put
 from litestar.exceptions import NotFoundException
 
-from config.exceptions import UserAlreadyExistError
+from config.exceptions import UserAlreadyExistError, DatabaseError
 from models.user import User
 from schemas.user import UpdateUserSchema, UserSchema, UserCreateSchema
 
@@ -56,23 +57,46 @@ async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSessio
     return {"id": user.id, "username": user.username, "email": user.email}
 
 
-@post('/create')
+@post('/register')
 async def create_user(data: UserCreateSchema, session: AsyncSession) -> dict:
     """Create user."""
-    query = select(User).where(User.username == data.username)
+    query = select(User).where(
+        or_(
+            User.username == data.username,
+            User.email == data.email
+        )
+    )
     existing_user = await session.execute(query)
 
     if existing_user.scalar_one_or_none():
         raise UserAlreadyExistError()
+
     user = User(
         username=data.username,
-        email=data.email
-    )
-    session.add(user)
-    await session.commit()
-    await session.refresh(user)
-    return {"id": user.id, "username": user.username, "email": user.email}
+        email=data.email,
+        first_name=data.first_name,
+        last_name=data.last_name,
 
+    )
+    user.password = data.password
+    try:
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        print(f"Debug: User ID after refresh: {user.id}")
+        return {
+            'message': 'User was successfully added.',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name
+            }
+        }
+    except SQLAlchemyError as sql_error:
+        await session.rollback()
+        raise DatabaseError(str(sql_error))
 
 @delete('/delete/{user_id:int}')
 async def delete_user(user_id: int, session: AsyncSession) -> None:
