@@ -20,28 +20,38 @@ async def get_users(session: AsyncSession) -> List[UserSchema]:
     users = result.scalars().all()
     return [UserSchema.from_orm(user) for user in users]
 
-@get('/{user_id:int}')
-async def get_user_by_id(user_id: int, session: AsyncSession) -> dict:
-    """Get user by id."""
-    query = select(User).where(User.id == user_id)
+
+@get('/{username:str}')
+async def get_user_by_username(username: str, session: AsyncSession) -> dict:
+    """Get user by username."""
+    query = select(User).where(User.username == username)
     result = await session.execute(query)
 
     # Like get_object_or_404
     user = result.scalar_one_or_none()
     if user is None:
-        raise NotFoundException(f'User with {user_id} not found.')
+        raise NotFoundException(f'User with {username} not found.')
 
-    return {"id": user.id, "username": user.username, "email": user.email}
+    return {
+        'message': 'successfully.',
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        }
+    }
 
 
-@put('/update/{user_id:int}')
-async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSession) -> dict:
+@put('/update/{username:str}')
+async def update_user(username: str, data: UpdateUserSchema, session: AsyncSession) -> dict:
     """Update user data."""
-    query = select(User).where(User.id == user_id)
+    query = select(User).where(User.username == username)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
     if user is None:
-        raise NotFoundException(f'User with {user_id} not found.')
+        raise NotFoundException(f'User with {username} not found.')
 
     if user.username != data.username:
         existing_user_query = (
@@ -54,7 +64,16 @@ async def update_user(user_id: int, data: UpdateUserSchema, session: AsyncSessio
     user.email = data.email
     await session.commit()
     await session.refresh(user)
-    return {"id": user.id, "username": user.username, "email": user.email}
+    return {
+        'message': 'User data was successfully updated.',
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        }
+    }
 
 
 @post('/register')
@@ -98,15 +117,16 @@ async def create_user(data: UserCreateSchema, session: AsyncSession) -> dict:
         await session.rollback()
         raise DatabaseError(str(sql_error))
 
-@delete('/delete/{user_id:int}')
-async def delete_user(user_id: int, session: AsyncSession) -> None:
+
+@delete('/delete/{username:str}')
+async def delete_user(username: str, session: AsyncSession) -> None:
     """Delete user."""
-    query = select(User).where(User.id == user_id)
+    query = select(User).where(User.username == username)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
 
     if user is None:
-        raise NotFoundException(f'User with {user_id} not found.')
+        raise NotFoundException(f'User with {username} not found.')
 
     await session.delete(user)
     await session.commit()
@@ -114,6 +134,6 @@ async def delete_user(user_id: int, session: AsyncSession) -> None:
 
 user_router = Router(
     path='/users',
-    route_handlers=[get_users, get_user_by_id,
+    route_handlers=[get_users, get_user_by_username,
                     create_user, update_user, delete_user]
 )
