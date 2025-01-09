@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from pydantic import ConfigDict
 from passlib.context import CryptContext
+from sqlalchemy.orm import relationship
+from datetime import datetime
 
 from database.connection import Base
 
@@ -20,7 +22,8 @@ class User(Base):
     email = Column(String(100), index=True, nullable=False)
     first_name = Column(String(30))
     last_name = Column(String(30))
-    hashed_password = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    sessions = relationship('Session', back_populates="user", cascade="all, delete")
 
 
     @property
@@ -36,3 +39,15 @@ class User(Base):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+
+class Session(Base):
+    __tablename__ = 'sessions'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+    user = relationship('User', back_populates='sessions')
+
+    def __repr__(self):
+        return f'<Session {self.id} for user {self.user_id}>'
