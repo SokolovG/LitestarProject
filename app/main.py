@@ -3,7 +3,7 @@ import uvicorn
 from litestar import Litestar
 
 from database.connection import Base, engine, get_session
-from routes.user import user_router
+from routes.user import UserController, RegisterController
 
 
 async def create_tables():
@@ -11,7 +11,7 @@ async def create_tables():
         await conn.run_sync(Base.metadata.create_all)
 
 
-app = Litestar(route_handlers=[user_router],
+app = Litestar(route_handlers=[UserController, RegisterController],
                on_startup=[create_tables],
                dependencies={"session": get_session},
                debug=True
